@@ -11,19 +11,15 @@ export default function BannerImage({ imageSrc }: Props) {
   if (dismissed) return null;
 
   return (
-    <div className="relative w-full h-[200px] overflow-hidden rounded-[20px] border border-white/10">
+    <div className="relative w-full overflow-hidden rounded-[20px] border border-white/10">
       {imageSrc ? (
         <img
           src={imageSrc}
           alt="Banner"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ zIndex: 1, display: 'block' }}
+          className="block w-full h-auto"
         />
       ) : (
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center gap-2"
-          style={{ zIndex: 1 }}
-        >
+        <div className="w-full aspect-[4/1] flex flex-col items-center justify-center gap-2">
           <span className="text-sm font-medium text-zinc-400">
             Banner Image
           </span>
