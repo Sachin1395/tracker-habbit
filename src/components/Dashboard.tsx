@@ -253,7 +253,7 @@ export default function Dashboard() {
 
       <main className="relative max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* 1. Banner Image Placeholder */}
-        <BannerImage imageSrc="/banner2.jpeg" />
+        <BannerImage imageSrc="/banner.jpeg" />
 
         {/* XP Summary cards */}
         <XpSummary myTasks={myTasks} />
