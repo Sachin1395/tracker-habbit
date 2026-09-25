@@ -11,26 +11,28 @@ type Props = {
   data: Map<string, DayData>;
 };
 
-// Show last ~26 weeks (roughly 6 months), GitHub-style.
 const WEEKS = 26;
+const ORANGE = '#FF9F1C';
+const PRIMARY = '#F5F5F5';
+const SECONDARY = '#A1A1AA';
+const MUTED = '#71717A';
 
-function intensityColor(xp: number, max: number): string {
-  if (xp === 0) return 'bg-slate-800';
+function intensityStyle(xp: number, max: number): React.CSSProperties {
+  if (xp === 0) return { background: 'rgba(255,255,255,0.05)' };
   const ratio = max > 0 ? xp / max : 0;
-  if (ratio <= 0.25) return 'bg-amber-900/60';
-  if (ratio <= 0.5) return 'bg-amber-700/70';
-  if (ratio <= 0.75) return 'bg-amber-500/80';
-  return 'bg-amber-400';
+  let alpha: number;
+  if (ratio <= 0.25) alpha = 0.25;
+  else if (ratio <= 0.5) alpha = 0.45;
+  else if (ratio <= 0.75) alpha = 0.70;
+  else return { background: ORANGE };
+  return { background: `rgba(255,159,28,${alpha})` };
 }
 
 export default function HabitHeatmap({ data }: Props) {
   const [tooltip, setTooltip] = useState<{ day: DayData | null; x: number; y: number } | null>(null);
 
-  // Build grid: columns = weeks, rows = days of week (Mon–Sun)
   const today = new Date();
   const todayDateStr = toLocalDateStr(today);
-
-  // Find the Sunday of the current week, then go back WEEKS weeks
   const todayDay = today.getDay();
   const diffToSunday = todayDay === 0 ? 0 : 7 - todayDay;
   const endSunday = addDays(today, diffToSunday);
@@ -41,8 +43,7 @@ export default function HabitHeatmap({ data }: Props) {
     const weekStart = addDays(startMonday, w * 7);
     const days: { date: Date; dayIdx: number }[] = [];
     for (let d = 0; d < 7; d++) {
-      const date = addDays(weekStart, d);
-      days.push({ date, dayIdx: d });
+      days.push({ date: addDays(weekStart, d), dayIdx: d });
     }
     weeks.push(days);
   }
@@ -50,14 +51,13 @@ export default function HabitHeatmap({ data }: Props) {
   const max = Math.max(0, ...Array.from(data.values()).map((d) => d.xp));
 
   return (
-    <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6">
-      <h3 className="text-white font-semibold mb-1">Habit Heatmap</h3>
-      <p className="text-slate-400 text-xs mb-4">Your completed-task XP over the last 6 months</p>
+    <div className="glass rounded-[18px] p-6">
+      <h3 className="font-semibold mb-1" style={{ color: PRIMARY }}>Habit Heatmap</h3>
+      <p className="text-xs mb-4" style={{ color: SECONDARY }}>Your completed-task XP over the last 6 months</p>
 
       <div className="overflow-x-auto">
         <div className="flex gap-1 relative" onMouseLeave={() => setTooltip(null)}>
-          {/* Day labels */}
-          <div className="flex flex-col gap-1 mr-2 text-[10px] text-slate-500 pt-0.5">
+          <div className="flex flex-col gap-1 mr-2 text-[10px] pt-0.5" style={{ color: MUTED }}>
             <div className="h-3.5 leading-3.5">Mon</div>
             <div className="h-3.5 leading-3.5"></div>
             <div className="h-3.5 leading-3.5">Wed</div>
@@ -78,9 +78,10 @@ export default function HabitHeatmap({ data }: Props) {
                 return (
                   <div
                     key={dayIdx}
-                    className={`w-3.5 h-3.5 rounded-sm transition hover:ring-1 hover:ring-white/30 cursor-pointer ${
-                      isFuture ? 'bg-slate-800/30 opacity-30' : intensityColor(xp, max)
-                    }`}
+                    className="w-3.5 h-3.5 rounded-sm transition cursor-pointer"
+                    style={{
+                      ...(isFuture ? { background: 'rgba(255,255,255,0.02)', opacity: 0.3 } : intensityStyle(xp, max)),
+                    }}
                     onMouseEnter={(e) => {
                       const rect = (e.target as HTMLElement).getBoundingClientRect();
                       setTooltip({ day: { date: dateStr, xp, count }, x: rect.left, y: rect.top });
@@ -96,32 +97,33 @@ export default function HabitHeatmap({ data }: Props) {
           ))}
         </div>
 
-        {/* Legend */}
-        <div className="flex items-center gap-2 mt-4 text-xs text-slate-500">
+        <div className="flex items-center gap-2 mt-4 text-xs" style={{ color: MUTED }}>
           <span>Less</span>
           <div className="flex gap-1">
-            <div className="w-3 h-3 rounded-sm bg-slate-800" />
-            <div className="w-3 h-3 rounded-sm bg-amber-900/60" />
-            <div className="w-3 h-3 rounded-sm bg-amber-700/70" />
-            <div className="w-3 h-3 rounded-sm bg-amber-500/80" />
-            <div className="w-3 h-3 rounded-sm bg-amber-400" />
+            <div className="w-3 h-3 rounded-sm" style={{ background: 'rgba(255,255,255,0.05)' }} />
+            <div className="w-3 h-3 rounded-sm" style={{ background: 'rgba(255,159,28,0.25)' }} />
+            <div className="w-3 h-3 rounded-sm" style={{ background: 'rgba(255,159,28,0.45)' }} />
+            <div className="w-3 h-3 rounded-sm" style={{ background: 'rgba(255,159,28,0.70)' }} />
+            <div className="w-3 h-3 rounded-sm" style={{ background: ORANGE }} />
           </div>
           <span>More</span>
         </div>
       </div>
 
-      {/* Tooltip */}
       {tooltip && tooltip.day && (
         <div
-          className="fixed z-50 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs shadow-xl pointer-events-none"
+          className="fixed z-50 rounded-lg px-3 py-2 text-xs shadow-xl pointer-events-none"
           style={{
             left: tooltip.x,
             top: tooltip.y - 56,
             transform: 'translateX(-50%)',
+            background: 'rgba(10,10,10,0.95)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(12px)',
           }}
         >
-          <div className="text-white font-medium">{formatDateNice(tooltip.day.date)}</div>
-          <div className="text-slate-400">
+          <div className="font-medium" style={{ color: PRIMARY }}>{formatDateNice(tooltip.day.date)}</div>
+          <div style={{ color: SECONDARY }}>
             {tooltip.day.count > 0
               ? `${tooltip.day.count} task${tooltip.day.count !== 1 ? 's' : ''} · ${tooltip.day.xp} XP`
               : 'No tasks completed'}

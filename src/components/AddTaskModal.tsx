@@ -3,6 +3,12 @@ import { X, Zap, Calendar, CheckCircle2 } from 'lucide-react';
 import { XP_VALUES } from '@/lib/supabase';
 import { todayStr } from '@/lib/dates';
 
+const ORANGE = '#FF9F1C';
+const GREEN = '#22C55E';
+const PRIMARY = '#F5F5F5';
+const SECONDARY = '#A1A1AA';
+const MUTED = '#71717A';
+
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -27,9 +33,14 @@ export default function AddTaskModal({ open, onClose, onAdd }: Props) {
     }
     setBusy(true);
     setError(null);
-    await onAdd(taskName.trim(), xp, taskDate, completed);
+    try {
+      await onAdd(taskName.trim(), xp, taskDate, completed);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add task');
+      setBusy(false);
+      return;
+    }
     setBusy(false);
-    // Reset
     setTaskName('');
     setXp(10);
     setTaskDate(todayStr());
@@ -39,39 +50,44 @@ export default function AddTaskModal({ open, onClose, onAdd }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl"
+        className="glass w-full max-w-md rounded-[20px]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
-          <h3 className="text-white font-semibold text-lg">Add Task</h3>
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <h3 className="font-semibold text-lg" style={{ color: PRIMARY }}>Add Task</h3>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg hover:bg-slate-800 flex items-center justify-center transition"
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition"
+            style={{ color: MUTED }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
           >
-            <X className="w-4 h-4 text-slate-400" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">Task Name</label>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: SECONDARY }}>Task Name</label>
             <input
               type="text"
               value={taskName}
               onChange={(e) => setTaskName(e.target.value)}
               autoFocus
-              className="w-full px-4 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition"
+              className="glass-input w-full px-4 py-2.5 rounded-xl text-white placeholder-slate-500"
+              style={{ color: PRIMARY }}
               placeholder="What do you need to do?"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              <Zap className="w-4 h-4 inline mr-1 text-amber-400" />
+            <label className="block text-sm font-medium mb-2" style={{ color: SECONDARY }}>
+              <Zap className="w-4 h-4 inline mr-1" style={{ color: ORANGE }} />
               XP Value
             </label>
             <div className="grid grid-cols-5 gap-2">
@@ -80,11 +96,18 @@ export default function AddTaskModal({ open, onClose, onAdd }: Props) {
                   key={v}
                   type="button"
                   onClick={() => setXp(v)}
-                  className={`py-2.5 rounded-lg font-semibold text-sm transition ${
+                  className="py-2.5 rounded-xl font-semibold text-sm transition"
+                  style={
                     xp === v
-                      ? 'bg-amber-400 text-slate-950'
-                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                  }`}
+                      ? { background: ORANGE, color: '#000000' }
+                      : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', color: SECONDARY }
+                  }
+                  onMouseEnter={(e) => {
+                    if (xp !== v) e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (xp !== v) e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                  }}
                 >
                   {v}
                 </button>
@@ -93,15 +116,16 @@ export default function AddTaskModal({ open, onClose, onAdd }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1.5">
-              <Calendar className="w-4 h-4 inline mr-1 text-slate-400" />
+            <label className="block text-sm font-medium mb-1.5" style={{ color: SECONDARY }}>
+              <Calendar className="w-4 h-4 inline mr-1" style={{ color: MUTED }} />
               Date
             </label>
             <input
               type="date"
               value={taskDate}
               onChange={(e) => setTaskDate(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition [color-scheme:dark]"
+              className="glass-input w-full px-4 py-2.5 rounded-xl"
+              style={{ color: PRIMARY, colorScheme: 'dark' }}
             />
           </div>
 
@@ -109,17 +133,20 @@ export default function AddTaskModal({ open, onClose, onAdd }: Props) {
             <button
               type="button"
               onClick={() => setCompleted(!completed)}
-              className={`w-6 h-6 rounded-md flex items-center justify-center transition ${
-                completed ? 'bg-emerald-500 text-white' : 'bg-slate-800 border border-slate-700'
-              }`}
+              className="w-6 h-6 rounded-md flex items-center justify-center transition"
+              style={
+                completed
+                  ? { background: GREEN, color: '#000000' }
+                  : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)' }
+              }
             >
               {completed && <CheckCircle2 className="w-4 h-4" />}
             </button>
-            <span className="text-sm text-slate-300">Mark as completed now</span>
+            <span className="text-sm" style={{ color: SECONDARY }}>Mark as completed now</span>
           </label>
 
           {error && (
-            <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2.5">
+            <div className="text-sm rounded-lg px-4 py-2.5" style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}>
               {error}
             </div>
           )}
@@ -127,7 +154,7 @@ export default function AddTaskModal({ open, onClose, onAdd }: Props) {
           <button
             type="submit"
             disabled={busy}
-            className="w-full py-2.5 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-semibold hover:from-amber-300 hover:to-orange-400 transition disabled:opacity-50"
+            className="btn-primary w-full py-2.5"
           >
             {busy ? 'Adding…' : 'Add Task'}
           </button>

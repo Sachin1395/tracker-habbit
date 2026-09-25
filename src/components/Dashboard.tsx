@@ -14,6 +14,11 @@ import DailyXpLeaderboard, { type DailyLeaderboardEntry } from './DailyXpLeaderb
 import HabitHeatmap from './HabitHeatmap';
 import XpSummary from './XpSummary';
 
+const ORANGE = '#FF9F1C';
+const PRIMARY = '#F5F5F5';
+const SECONDARY = '#A1A1AA';
+const MUTED = '#71717A';
+
 type HeatmapDay = { date: string; xp: number; count: number };
 
 export default function Dashboard() {
@@ -26,7 +31,6 @@ export default function Dashboard() {
 
   const currentUserId = session?.user.id;
 
-  // Fetch all tasks with profile names
   const fetchAllTasks = useCallback(async () => {
     const { data } = await supabase
       .from('tasks')
@@ -35,7 +39,6 @@ export default function Dashboard() {
     if (data) setAllTasks(data as TaskWithProfile[]);
   }, []);
 
-  // Fetch all profiles for leaderboards
   const fetchProfiles = useCallback(async () => {
     const { data } = await supabase.from('profiles').select('*').order('name');
     if (data) setProfiles(data as Profile[]);
@@ -45,7 +48,6 @@ export default function Dashboard() {
     fetchAllTasks();
     fetchProfiles().then(() => setLoading(false));
 
-    // Real-time subscriptions — sync across sessions/devices
     const taskChannel = supabase
       .channel('tasks-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
@@ -66,12 +68,10 @@ export default function Dashboard() {
     };
   }, [fetchAllTasks, fetchProfiles]);
 
-  // Derive my tasks directly from allTasks — no duplicate state
   const myTasks: Task[] = currentUserId
     ? allTasks.filter((t) => t.user_id === currentUserId)
     : [];
 
-  // Compute overall leaderboard (lifetime XP from completed tasks)
   const overallLeaderboard: LeaderboardEntry[] = profiles
     .map((p) => {
       const totalXp = allTasks
@@ -83,18 +83,15 @@ export default function Dashboard() {
 
   const currentTopper = overallLeaderboard[0] ?? null;
 
-  // Treated by: the user with lowest overall XP among those with at least 1 completed task
   const activeUsers = overallLeaderboard.filter((e) => e.totalXp > 0);
   const treatedByUser = activeUsers.length > 0
     ? activeUsers.reduce((min, e) => (e.totalXp < min.totalXp ? e : min))
     : null;
 
-  // Today's tasks
   const todaysTasks = allTasks
     .filter((t) => t.task_date === todayStr())
     .sort((a, b) => Number(a.completed) - Number(b.completed));
 
-  // Daily XP leaderboard for selected date
   const dailyLeaderboard: DailyLeaderboardEntry[] = profiles
     .map((p) => {
       const dailyXp = allTasks
@@ -104,7 +101,6 @@ export default function Dashboard() {
     })
     .sort((a, b) => b.dailyXp - a.dailyXp);
 
-  // Heatmap data for current user
   const heatmapData = new Map<string, HeatmapDay>();
   for (const task of myTasks) {
     if (!task.completed) continue;
@@ -117,14 +113,11 @@ export default function Dashboard() {
     }
   }
 
-  // --- Optimistic mutations ---
-
   async function handleAddTask(taskName: string, xp: number, taskDate: string, completed: boolean) {
     if (!currentUserId) return;
     const tempId = crypto.randomUUID();
     const now = new Date().toISOString();
 
-    // Optimistic insert
     const optimisticTask: TaskWithProfile = {
       id: tempId,
       user_id: currentUserId,
@@ -138,7 +131,6 @@ export default function Dashboard() {
     };
     setAllTasks((prev) => [optimisticTask, ...prev]);
 
-    // Persist to DB
     const { data, error } = await supabase
       .from('tasks')
       .insert({
@@ -152,12 +144,10 @@ export default function Dashboard() {
       .single();
 
     if (error) {
-      // Rollback on failure
       setAllTasks((prev) => prev.filter((t) => t.id !== tempId));
       throw error;
     }
 
-    // Replace temp with real row
     if (data) {
       setAllTasks((prev) => prev.map((t) => (t.id === tempId ? (data as TaskWithProfile) : t)));
     }
@@ -167,7 +157,6 @@ export default function Dashboard() {
     const newCompleted = !task.completed;
     const now = new Date().toISOString();
 
-    // Optimistic update
     setAllTasks((prev) =>
       prev.map((t) =>
         t.id === task.id
@@ -185,7 +174,6 @@ export default function Dashboard() {
       .eq('id', task.id);
 
     if (error) {
-      // Rollback on failure
       setAllTasks((prev) =>
         prev.map((t) =>
           t.id === task.id
@@ -198,13 +186,11 @@ export default function Dashboard() {
   }
 
   async function handleDeleteTask(task: Task) {
-    // Optimistic delete
     setAllTasks((prev) => prev.filter((t) => t.id !== task.id));
 
     const { error } = await supabase.from('tasks').delete().eq('id', task.id);
 
     if (error) {
-      // Re-fetch to restore on failure
       fetchAllTasks();
       console.error('Delete error:', error);
     }
@@ -219,34 +205,45 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-400 text-lg">Loading…</div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-lg" style={{ color: SECONDARY }}>Loading…</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-black relative">
+      {/* Ambient glows */}
+      <div className="ambient-glow ambient-glow-orange" style={{ top: '0px', right: '-50px', width: '350px', height: '350px' }} />
+      <div className="ambient-glow ambient-glow-white" style={{ top: '40%', left: '-80px', width: '300px', height: '300px' }} />
+
       {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800">
+      <header
+        className="sticky top-0 z-40"
+        style={{
+          background: 'rgba(0,0,0,0.65)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-              <span className="text-slate-950 font-bold text-lg">X</span>
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,159,28,0.12)', border: '1px solid rgba(255,159,28,0.18)' }}>
+              <span className="font-bold text-lg" style={{ color: ORANGE }}>X</span>
             </div>
-            <h1 className="text-white font-bold text-lg hidden sm:block">XP Tracker</h1>
+            <h1 className="font-bold text-lg hidden sm:block" style={{ color: PRIMARY }}>XP Tracker</h1>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-              <div className="text-white text-sm font-medium">{profile?.name}</div>
-              <div className="text-slate-500 text-xs">{profile?.email}</div>
+              <div className="text-sm font-medium" style={{ color: PRIMARY }}>{profile?.name}</div>
+              <div className="text-xs" style={{ color: MUTED }}>{profile?.email}</div>
             </div>
-            <div className="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center text-white font-semibold text-sm">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm" style={{ background: 'rgba(255,255,255,0.06)', color: SECONDARY }}>
               {profile?.name.charAt(0).toUpperCase()}
             </div>
             <button
               onClick={signOut}
-              className="text-slate-400 hover:text-white text-sm font-medium transition px-3 py-1.5 rounded-lg hover:bg-slate-800"
+              className="btn-secondary text-sm font-medium px-3 py-1.5"
             >
               Sign out
             </button>
@@ -254,7 +251,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* 1. Banner Image Placeholder */}
         <BannerImage />
 
@@ -271,7 +268,7 @@ export default function Dashboard() {
         <div className="flex justify-end">
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-semibold hover:from-amber-300 hover:to-orange-400 transition shadow-lg shadow-orange-500/10"
+            className="btn-primary px-5 py-2.5"
           >
             + Add Task
           </button>

@@ -1,43 +1,50 @@
 import { Crown, Zap } from 'lucide-react';
 import type { LeaderboardEntry } from './OverallLeaderboard';
 
+const ORANGE = '#FF9F1C';
+
 export default function CurrentTopper({ topper }: { topper: LeaderboardEntry | null }) {
   if (!topper) {
     return (
-      <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800">
+      <div className="glass glass-hover rounded-[18px] p-6">
         <div className="flex items-center gap-3 mb-2">
-          <Crown className="w-5 h-5 text-amber-400" />
-          <h3 className="text-white font-semibold">Current Topper</h3>
+          <Crown className="w-5 h-5" style={{ color: ORANGE }} />
+          <h3 className="font-semibold" style={{ color: '#F5F5F5' }}>Current Topper</h3>
         </div>
-        <p className="text-slate-500 text-sm">No completed tasks yet. Be the first!</p>
+        <p className="text-sm" style={{ color: '#71717A' }}>No completed tasks yet. Be the first!</p>
       </div>
     );
   }
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-2xl p-6 border border-amber-500/20">
-      <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-amber-500/10 blur-2xl" />
+    <div
+      className="glass glass-hover rounded-[18px] p-6 relative overflow-hidden"
+      style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,159,28,0.18)' }}
+    >
       <div className="relative">
-        <div className="flex items-center gap-2 mb-3">
-          <Crown className="w-5 h-5 text-amber-400" />
-          <h3 className="text-amber-400 font-semibold text-sm uppercase tracking-wide">Current Topper</h3>
+        <div className="flex items-center gap-2 mb-4">
+          <Crown className="w-5 h-5" style={{ color: ORANGE }} />
+          <h3 className="font-semibold text-sm uppercase tracking-wide" style={{ color: ORANGE }}>Current Topper</h3>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-slate-950 font-bold text-lg">
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
+              style={{ background: 'rgba(255,159,28,0.12)', color: ORANGE }}
+            >
               {topper.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <div className="text-white font-bold text-lg">{topper.name}</div>
-              <div className="text-slate-400 text-xs">Lifetime leader</div>
+              <div className="font-bold text-lg" style={{ color: '#F5F5F5' }}>{topper.name}</div>
+              <div className="text-xs" style={{ color: '#71717A' }}>Lifetime leader</div>
             </div>
           </div>
           <div className="text-right">
-            <div className="flex items-center gap-1.5 text-amber-400 font-bold text-2xl">
+            <div className="flex items-center gap-1.5 font-bold text-2xl" style={{ color: ORANGE }}>
               <Zap className="w-5 h-5" />
               {topper.totalXp.toLocaleString()}
             </div>
-            <div className="text-slate-400 text-xs">Total XP</div>
+            <div className="text-xs" style={{ color: '#71717A' }}>Total XP</div>
           </div>
         </div>
       </div>

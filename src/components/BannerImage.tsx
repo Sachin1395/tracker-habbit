@@ -10,7 +10,10 @@ export default function BannerImage({ imageSrc }: Props) {
   if (dismissed) return null;
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-slate-800 bg-slate-900" style={{ aspectRatio: '21 / 6' }}>
+    <div
+      className="glass relative w-full overflow-hidden rounded-[20px]"
+      style={{ height: '200px' }}
+    >
       {imageSrc ? (
         <img
           src={imageSrc}
@@ -18,18 +21,22 @@ export default function BannerImage({ imageSrc }: Props) {
           className="absolute inset-0 w-full h-full object-cover"
         />
       ) : (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-600">
-          <ImageIcon className="w-7 h-7" />
-          <span className="text-sm font-medium text-slate-500">Banner Image</span>
-          <span className="text-xs text-slate-600">Replace with your image</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+          <ImageIcon className="w-8 h-8" style={{ color: '#71717A' }} />
+          <span className="text-sm font-medium" style={{ color: '#A1A1AA' }}>Banner Image</span>
+          <span className="text-xs" style={{ color: '#71717A' }}>Replace with your image</span>
         </div>
       )}
       <button
         onClick={() => setDismissed(true)}
-        className="absolute top-3 right-3 w-8 h-8 rounded-lg bg-black/40 hover:bg-black/60 backdrop-blur-sm flex items-center justify-center transition z-10"
+        className="absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center transition z-10"
+        style={{
+          background: 'rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(8px)',
+        }}
         aria-label="Dismiss banner"
       >
-        <X className="w-4 h-4 text-white" />
+        <X className="w-4 h-4" style={{ color: '#F5F5F5' }} />
       </button>
     </div>
   );

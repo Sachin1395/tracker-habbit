@@ -7,8 +7,8 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-400 text-lg">Loading…</div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-lg" style={{ color: '#A1A1AA' }}>Loading…</div>
       </div>
     );
   }
