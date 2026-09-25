@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, ImageIcon } from 'lucide-react';
+import { X } from 'lucide-react';
 
 type Props = {
   imageSrc?: string | null;
@@ -7,36 +7,42 @@ type Props = {
 
 export default function BannerImage({ imageSrc }: Props) {
   const [dismissed, setDismissed] = useState(false);
+
   if (dismissed) return null;
 
   return (
-    <div
-      className="glass relative w-full overflow-hidden rounded-[20px]"
-      style={{ height: '200px' }}
-    >
+    <div className="relative w-full h-[200px] overflow-hidden rounded-[20px] border border-white/10">
       {imageSrc ? (
         <img
           src={imageSrc}
           alt="Banner"
           className="absolute inset-0 w-full h-full object-cover"
+          style={{ zIndex: 1, display: 'block' }}
         />
       ) : (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-          <ImageIcon className="w-8 h-8" style={{ color: '#71717A' }} />
-          <span className="text-sm font-medium" style={{ color: '#A1A1AA' }}>Banner Image</span>
-          <span className="text-xs" style={{ color: '#71717A' }}>Replace with your image</span>
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2"
+          style={{ zIndex: 1 }}
+        >
+          <span className="text-sm font-medium text-zinc-400">
+            Banner Image
+          </span>
+          <span className="text-xs text-zinc-500">
+            Replace with your image
+          </span>
         </div>
       )}
+
       <button
         onClick={() => setDismissed(true)}
-        className="absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center transition z-10"
+        className="absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center z-20"
         style={{
-          background: 'rgba(0,0,0,0.4)',
+          background: 'rgba(0,0,0,0.55)',
           backdropFilter: 'blur(8px)',
         }}
         aria-label="Dismiss banner"
       >
-        <X className="w-4 h-4" style={{ color: '#F5F5F5' }} />
+        <X className="w-4 h-4 text-white" />
       </button>
     </div>
   );
