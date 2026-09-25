@@ -13,7 +13,7 @@ export default function BannerImage({ imageSrc }: Props) {
   return (
     <div
       className="relative w-full overflow-hidden rounded-[20px] border border-white/10"
-      style={{ aspectRatio: '1600 / 595' }}
+      style={{ aspectRatio: '1600 / 795' }}
     >
       {imageSrc ? (
         <img
