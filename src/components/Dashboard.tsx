@@ -19,6 +19,7 @@ import OverallLeaderboard, { type LeaderboardEntry, type LeaderboardMode } from 
 import TodaysTasks from './TodaysTasks';
 import MyTasks from './MyTasks';
 import AddTaskModal from './AddTaskModal';
+import DeleteAccountModal from './DeleteAccountModal';
 import DailyXpLeaderboard, { type DailyLeaderboardEntry } from './DailyXpLeaderboard';
 import HabitHeatmap from './HabitHeatmap';
 import XpSummary from './XpSummary';
@@ -31,12 +32,13 @@ const MUTED = '#71717A';
 type HeatmapDay = { date: string; xp: number; count: number };
 
 export default function Dashboard() {
-  const { session, profile, signOut } = useAuth();
+  const { session, profile, signOut, deleteAccount } = useAuth();
   const [allTasks, setAllTasks] = useState<TaskWithProfile[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [dailyStats, setDailyStats] = useState<DailyStat[]>([]);
   const [userStats, setUserStats] = useState<UserStat[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(todayStr());
   const [leaderboardMode, setLeaderboardMode] = useState<LeaderboardMode>('xp');
@@ -401,6 +403,15 @@ export default function Dashboard() {
             >
               Sign out
             </button>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="text-sm font-medium px-3 py-1.5 rounded-xl transition"
+              style={{ color: MUTED, border: '1px solid rgba(255,255,255,0.08)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = MUTED; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+            >
+              Delete account
+            </button>
           </div>
         </div>
       </header>
@@ -457,6 +468,12 @@ export default function Dashboard() {
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
         onAdd={handleAddTask}
+      />
+
+      <DeleteAccountModal
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={deleteAccount}
       />
     </div>
   );
