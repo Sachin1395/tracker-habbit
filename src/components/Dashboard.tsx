@@ -278,11 +278,6 @@ export default function Dashboard() {
       setAllTasks((prev) => prev.map((t) => (t.id === tempId ? realTask : t)));
     }
 
-    // If completed, the task will be auto-cleaned. Run cleanup + refresh stats.
-    if (completed) {
-      await runCleanup();
-      await fetchTasks();
-    }
     // Stats will update via realtime, but also force-refresh for snappiness
     await Promise.all([fetchDailyStats(), fetchUserStats()]);
   }
@@ -317,16 +312,10 @@ export default function Dashboard() {
 
     if (data) {
       const updated = data as unknown as Task;
-      // If the task is now completed, it gets auto-deleted by cleanup
-      if (updated.completed) {
-        await runCleanup();
-        await fetchTasks();
-      } else {
-        // Update local state with the server-confirmed row
-        setAllTasks((prev) =>
-          prev.map((t) => (t.id === task.id ? { ...t, ...updated, profiles: t.profiles } : t))
-        );
-      }
+      // Keep the task in the list (completed tasks stay visible for today)
+      setAllTasks((prev) =>
+        prev.map((t) => (t.id === task.id ? { ...t, ...updated, profiles: t.profiles } : t))
+      );
     }
 
     await Promise.all([fetchDailyStats(), fetchUserStats()]);
