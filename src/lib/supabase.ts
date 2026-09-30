@@ -32,4 +32,22 @@ export type TaskWithProfile = Task & {
   profiles: { name: string } | null;
 };
 
+export type DailyStat = {
+  id: string;
+  user_id: string;
+  date: string;
+  planned_xp: number;
+  completed_xp: number;
+  planned_tasks: number;
+  completed_tasks: number;
+};
+
+export type UserStat = {
+  user_id: string;
+  lifetime_xp: number;
+};
+
 export const XP_VALUES = [5, 10, 15, 20, 25] as const;
+
+export const TREATED_BY_MIN_PLANNED_XP = 25;
+export const DAILY_STATS_WINDOW_DAYS = 14;

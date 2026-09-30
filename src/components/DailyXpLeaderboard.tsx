@@ -19,9 +19,19 @@ type Props = {
   onNext: () => void;
   entries: DailyLeaderboardEntry[];
   currentUserId: string | undefined;
+  canGoPrev: boolean;
+  canGoNext: boolean;
 };
 
-export default function DailyXpLeaderboard({ selectedDate, onPrev, onNext, entries, currentUserId }: Props) {
+export default function DailyXpLeaderboard({
+  selectedDate,
+  onPrev,
+  onNext,
+  entries,
+  currentUserId,
+  canGoPrev,
+  canGoNext,
+}: Props) {
   const activeEntries = entries.filter((e) => e.dailyXp > 0);
   const minXP = activeEntries.length > 0 ? Math.min(...activeEntries.map((e) => e.dailyXp)) : 0;
   const isToday = selectedDate === toLocalDateStr(new Date());
@@ -35,7 +45,8 @@ export default function DailyXpLeaderboard({ selectedDate, onPrev, onNext, entri
         <div className="flex items-center justify-center gap-4">
           <button
             onClick={onPrev}
-            className="btn-secondary w-9 h-9 flex items-center justify-center"
+            disabled={!canGoPrev}
+            className="btn-secondary w-9 h-9 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronLeft className="w-5 h-5" style={{ color: SECONDARY }} />
           </button>
@@ -45,7 +56,8 @@ export default function DailyXpLeaderboard({ selectedDate, onPrev, onNext, entri
           </div>
           <button
             onClick={onNext}
-            className="btn-secondary w-9 h-9 flex items-center justify-center"
+            disabled={!canGoNext}
+            className="btn-secondary w-9 h-9 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronRight className="w-5 h-5" style={{ color: SECONDARY }} />
           </button>

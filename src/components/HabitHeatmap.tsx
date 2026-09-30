@@ -9,9 +9,9 @@ type DayData = {
 
 type Props = {
   data: Map<string, DayData>;
+  maxDays: number;
 };
 
-const WEEKS = 26;
 const ORANGE = '#FF9F1C';
 const PRIMARY = '#F5F5F5';
 const SECONDARY = '#A1A1AA';
@@ -28,24 +28,34 @@ function intensityStyle(xp: number, max: number): React.CSSProperties {
   return { background: `rgba(255,159,28,${alpha})` };
 }
 
-export default function HabitHeatmap({ data }: Props) {
+export default function HabitHeatmap({ data, maxDays }: Props) {
   const [tooltip, setTooltip] = useState<{ day: DayData | null; x: number; y: number } | null>(null);
 
   const today = new Date();
   const todayDateStr = toLocalDateStr(today);
-  const todayDay = today.getDay();
-  const diffToSunday = todayDay === 0 ? 0 : 7 - todayDay;
-  const endSunday = addDays(today, diffToSunday);
-  const startMonday = addDays(endSunday, -(WEEKS * 7 - 1));
 
-  const weeks: { date: Date; dayIdx: number }[][] = [];
-  for (let w = 0; w < WEEKS; w++) {
-    const weekStart = addDays(startMonday, w * 7);
-    const days: { date: Date; dayIdx: number }[] = [];
+  // Build a grid of weeks columns × 7 days rows, covering exactly maxDays days
+  const totalDays = maxDays;
+  const weeks = Math.ceil(totalDays / 7);
+
+  // Start from today, go backwards
+  const dayCells: { date: Date; dateStr: string }[] = [];
+  for (let i = totalDays - 1; i >= 0; i--) {
+    const d = addDays(today, -i);
+    dayCells.push({ date: d, dateStr: toLocalDateStr(d) });
+  }
+
+  // Group into weeks (columns)
+  const weekColumns: { date: Date; dateStr: string }[][] = [];
+  for (let w = 0; w < weeks; w++) {
+    const col: { date: Date; dateStr: string }[] = [];
     for (let d = 0; d < 7; d++) {
-      days.push({ date: addDays(weekStart, d), dayIdx: d });
+      const idx = w * 7 + d;
+      if (idx < dayCells.length) {
+        col.push(dayCells[idx]);
+      }
     }
-    weeks.push(days);
+    weekColumns.push(col);
   }
 
   const max = Math.max(0, ...Array.from(data.values()).map((d) => d.xp));
@@ -53,7 +63,7 @@ export default function HabitHeatmap({ data }: Props) {
   return (
     <div className="glass rounded-[18px] p-6">
       <h3 className="font-semibold mb-1" style={{ color: PRIMARY }}>Habit Heatmap</h3>
-      <p className="text-xs mb-4" style={{ color: SECONDARY }}>Your completed-task XP over the last 6 months</p>
+      <p className="text-xs mb-4" style={{ color: SECONDARY }}>Your completed-task XP over the last {maxDays} days</p>
 
       <div className="overflow-x-auto">
         <div className="flex gap-1 relative" onMouseLeave={() => setTooltip(null)}>
@@ -67,17 +77,16 @@ export default function HabitHeatmap({ data }: Props) {
             <div className="h-3.5 leading-3.5">Sun</div>
           </div>
 
-          {weeks.map((week, wi) => (
+          {weekColumns.map((week, wi) => (
             <div key={wi} className="flex flex-col gap-1">
-              {week.map(({ date, dayIdx }) => {
-                const dateStr = toLocalDateStr(date);
+              {week.map(({ date, dateStr }) => {
                 const day = data.get(dateStr);
                 const xp = day?.xp ?? 0;
                 const count = day?.count ?? 0;
                 const isFuture = dateStr > todayDateStr;
                 return (
                   <div
-                    key={dayIdx}
+                    key={dateStr}
                     className="w-3.5 h-3.5 rounded-sm transition cursor-pointer"
                     style={{
                       ...(isFuture ? { background: 'rgba(255,255,255,0.02)', opacity: 0.3 } : intensityStyle(xp, max)),
@@ -88,7 +97,7 @@ export default function HabitHeatmap({ data }: Props) {
                     }}
                     onMouseMove={(e) => {
                       const rect = (e.target as HTMLElement).getBoundingClientRect();
-                      setTooltip((prev) => prev ? { ...prev, x: rect.left, y: rect.top } : null);
+                      setTooltip((prev) => (prev ? { ...prev, x: rect.left, y: rect.top } : null));
                     }}
                   />
                 );
